@@ -155,7 +155,7 @@ var Fade = function (vStart, vStop, interval, easing = 1) {
     this.vStart = parseInt(vStart * 255) ;
     this.vStop = parseInt(vStop * 255) ;
     this.interval = parseInt(interval);
-    this.easing = easing;
+    this.easing = parseInt(easing);
 }
 
 var Parser = function (pattern) {
