@@ -1,0 +1,4 @@
+.pio
+.vscode
+scene_editor/node_modules
+scene_editor/package-lock.json

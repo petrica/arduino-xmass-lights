@@ -1,0 +1,15 @@
+{
+  "name": "xmass-lights-editor",
+  "version": "1.0.0",
+  "description": "Xmass lights editor to generate scenes for a simple variable light",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  },
+  "scripts": {
+    "start": "live-server"
+  },
+  "author": "Petrica Martinescu",
+  "license": "ISC"
+}
