@@ -101,6 +101,9 @@ var Sampler = function(fades, sampleRate) {
 
             var val = 0;
             switch (fade.easing) {
+                case 4:
+                    val = this.easeOutElastic(x);
+                    break;
                 case 3:
                     val = this.easeInOutQuart(x);
                     break;
@@ -135,6 +138,17 @@ var Sampler = function(fades, sampleRate) {
     this.easeInOutQuart = function (x) {
         return x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
     }
+
+    // 4
+    this.easeOutElastic = function (x) {
+        const c4 = (2 * Math.PI) / 3;
+        
+        return x === 0
+          ? 0
+          : x === 1
+          ? 1
+          : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+        }
 }
 
 var Fade = function (vStart, vStop, interval, easing = 1) {
