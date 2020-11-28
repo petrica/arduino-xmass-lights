@@ -1,24 +1,33 @@
 $(function () {
     var player = null;
     var sampleRate = 100;
+    var chart = null;
+    var samples = [];
+
     $('textarea').val(localStorage.getItem('pattern'));
-    $('input#play').on('click', function (event) {
-        event.preventDefault();
+    $('textarea').on('keyup', function (event) {
         var pattern = $('textarea').val();
         localStorage.setItem('pattern', pattern);
+
         var parser = new Parser(pattern);
         var fades = parser.parse();
         
         var sampler = new Sampler(fades, sampleRate);
-        var samples = sampler.sample();
+        samples = sampler.sample();
 
-        console.log("Number of samples: " + samples.length);
-        var output = "{";
-        $(samples).each(function () {
-            output += this + ','
+        var labels = [];
+        var tick = Math.round(1000 /  sampleRate);
+        samples.forEach((step, index) => {
+            var value = index * tick;
+            labels.push((value % 500 == 0) ? value / 1000 + 's' : '');
         });
-        output += "}";
-        console.log(output);
+        console.log(labels);
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = samples;
+        chart.update('none');
+    });
+    $('input#play').on('click', function (event) {
+        event.preventDefault();
 
         if (player) {
             player.stop();
@@ -38,12 +47,65 @@ $(function () {
 
         return false;
     });
+
+    chart = new Chart($('#scene'), {
+        // The type of chart we want to create
+        type: 'line',
+    
+        // The data for our dataset
+        data: {
+            datasets: [{
+                label: 'My First dataset',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)'
+            }]
+        },
+    
+        // Configuration options go here
+        options: {
+            tooltips: {
+                enabled: false
+            },
+            elements: {
+                point: {
+                    radius: 1,
+                    hoverRadius: 1
+                }
+            },
+            legend: false,
+            scales: {
+                y: {
+                    display: false,
+                    min: 0,
+                    max: 255,
+                    gridLines: {
+                        display: false
+                    },
+                    ticks: {
+                        display: false
+                    }
+                },
+                x: {
+                    gridLines: {
+                        display: false
+                    },
+                    ticks: {
+                        autoSkip: false,
+                        display: true,
+                        major: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        }
+    });
 });
 
 var Player = function(samples, sampleRate) {
     this.samples = samples;
     this.sampleRate = parseInt(sampleRate);
-    this.body = $('body');
+    this.body = $('.lightbulb');
     this.loop = true;
 
     this.play = function () {
@@ -73,7 +135,12 @@ var Player = function(samples, sampleRate) {
     }
 
     this.draw = function(value) {
-        this.body.css('background-color', 'rgb(' + value + ',0,0)');
+        const from = [48, 48, 48];
+        const to = [255, 255, 255];
+        const r = from[0] + (to[0] - from[0]) / 255 * value;
+        const g = from[1] + (to[1] - from[1]) / 255 * value;
+        const b = from[2] + (to[2] - from[2]) / 255 * value;
+        this.body.css('background-color', 'rgb(' + r + ',' + g + ',' + b + ')');
     }
 }
 
@@ -115,12 +182,7 @@ var Sampler = function(fades, sampleRate) {
                     val = this.easeInQuart(x);
             }
 
-            if (fade.vStart <= fade.vStop) {
-                this.samples.push(Math.round(val * (fade.vStop - fade.vStart) + fade.vStart));
-            }
-            else {
-                this.samples.push(Math.round(fade.vStart - val * (fade.vStart - fade.vStop)));
-            }
+            this.samples.push(Math.round(val * (fade.vStop - fade.vStart) + fade.vStart));
         }
     }
 
@@ -130,7 +192,7 @@ var Sampler = function(fades, sampleRate) {
     }
 
     // 2
-    this.easeOutQuad = function (x) {
+    this.easeOutQuart = function (x) {
         return 1 - Math.pow(1 - x, 4);
     }
 
@@ -167,7 +229,6 @@ var Parser = function (pattern) {
         $(fadesRaw).each(function () {
             var elements = this.split(",");
             if (elements.length < 3 || elements.length > 4) {
-                alert(this + " is not a valid interval. It should have 3 or 4 elements.");
                 throw "Not a valid interval.";
             }
             fades.push(new Fade(elements[0].trim(), 

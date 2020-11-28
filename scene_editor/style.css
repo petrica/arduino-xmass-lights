@@ -1,14 +1,25 @@
-* { margin:0; padding:0; }
-
-html, body {
-    width:100%; 
-    height:100%;
-}
-
 body {
-    background-color: black;
+    background-color: rgb(48, 48, 48);
 }
 
 canvas {
     display: block; 
+}
+
+.bh {
+    fill: none;
+    stroke-width: 3px;
+    stroke-linecap: round;
+    transition: var(--transition-time);
+    transform: translate(1px,-1px);
+}
+
+.pure-form textarea {
+    width: 100%;
+}
+
+.lightbulb {
+    border: solid 1px #acacac;
+    margin: 10px;
+    height: 100%;
 }
