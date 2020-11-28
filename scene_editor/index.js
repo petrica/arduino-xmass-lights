@@ -168,18 +168,24 @@ var Sampler = function(fades, sampleRate) {
 
             var val = 0;
             switch (fade.easing) {
+                case 6:
+                    val = this.easeOutExpo(x);
+                    break;
+                case 5:
+                    val = this.easeInExpo(x);
+                    break;
                 case 4:
-                    val = this.easeOutElastic(x);
+                    val = this.easeOutQuart(x);
                     break;
                 case 3:
-                    val = this.easeInOutQuart(x);
+                    val = this.easeInQuart(x);
                     break;
                 case 2:
-                    val = this.easeOutQuart(x);
+                    val = this.easeOutSine(x);
                     break;
                 case 1:
                 default:
-                    val = this.easeInQuart(x);
+                    val = this.ç(x);
             }
 
             this.samples.push(Math.round(val * (fade.vStop - fade.vStart) + fade.vStart));
@@ -187,30 +193,34 @@ var Sampler = function(fades, sampleRate) {
     }
 
     // 1
+    this.easeInSine = function (x) {
+        return 1 - Math.cos((x * Math.PI) / 2);
+    }
+
+    // 2
+    this.easeOutSine = function (x) {
+        return Math.sin((x * Math.PI) / 2);
+    }
+
+    // 3
     this.easeInQuart = function (x) {
         return x * x * x * x;
     }
 
-    // 2
+    // 4
     this.easeOutQuart = function (x) {
         return 1 - Math.pow(1 - x, 4);
     }
 
-    // 3
-    this.easeInOutQuart = function (x) {
-        return x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
+    // 5
+    this.easeInExpo = function (x) {
+        return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
     }
 
-    // 4
-    this.easeOutElastic = function (x) {
-        const c4 = (2 * Math.PI) / 3;
-        
-        return x === 0
-          ? 0
-          : x === 1
-          ? 1
-          : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
-        }
+    // 6
+    this.easeOutExpo = function (x) {
+        return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+    }
 }
 
 var Fade = function (vStart, vStop, interval, easing = 1) {
