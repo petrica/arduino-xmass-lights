@@ -171,15 +171,26 @@ void Sampler::sampleFade(const fade_t &fade, uint16_t &index, uint8_t samples[])
 
         float val = 0;
         switch (fade.easing) {
-            case 3:
-                val = easeInOutQuart(x);
-            case 2:
+            case 6:
+                val = easeOutExpo(x);
+                break;
+            case 5:
+                val = easeInExpo(x);
+                break;
+            case 4:
                 val = easeOutQuart(x);
+                break;
+            case 3:
+                val = easeInQuart(x);
+                break;
+            case 2:
+                val = easeOutSine(x);
+                break;
             case 1:
             default:
-                val = easeInQuart(x);
+                val = easeInSine(x);
 
-        }
+        }   
 
         samples[index] = round(val * (fade.v_stop - fade.v_start) + fade.v_start);
 
@@ -187,14 +198,26 @@ void Sampler::sampleFade(const fade_t &fade, uint16_t &index, uint8_t samples[])
     }
 }
 
+float Sampler::easeInSine(float x) {
+  return 1 - cos((x * PI) / 2);
+}
+
+float Sampler::easeOutSine(float x) {
+  return sin((x * PI) / 2);
+}
+
 float Sampler::easeInQuart(float x) {
-    return x * x * x * x;
+  return x * x * x * x;
 }
 
 float Sampler::easeOutQuart(float x) {
-    return 1 - pow(1 - x, 4);
+  return 1 - pow(1 - x, 4);
 }
 
-float Sampler::easeInOutQuart(float x) {
-    return x < 0.5 ? 8 * x * x * x * x : 1 - pow(-2 * x + 2, 4) / 2;
+float Sampler::easeInExpo(float x) {
+  return x == 0 ? 0 : pow(2, 10 * x - 10);
+}
+
+float Sampler::easeOutExpo(float x) {
+  return x == 1 ? 1 : 1 - pow(2, -10 * x);
 }

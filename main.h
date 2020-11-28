@@ -64,9 +64,12 @@ class Sampler {
 
         uint16_t getNoSamplesFade(const fade_t &fade);
         void sampleFade(const fade_t &fade, uint16_t &index, uint8_t samples[]);
+        float easeInSine(float x);
+        float easeOutSine(float x);
         float easeInQuart(float x);
         float easeOutQuart(float x);
-        float easeInOutQuart(float x);
+        float easeInExpo(float x);
+        float easeOutExpo(float x);
 };
 
 #endif

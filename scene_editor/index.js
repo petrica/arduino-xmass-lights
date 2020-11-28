@@ -185,7 +185,7 @@ var Sampler = function(fades, sampleRate) {
                     break;
                 case 1:
                 default:
-                    val = this.ç(x);
+                    val = this.easeInSine(x);
             }
 
             this.samples.push(Math.round(val * (fade.vStop - fade.vStart) + fade.vStart));
