@@ -1,5 +1,6 @@
 body {
     background-color: rgb(48, 48, 48);
+    color: white;
 }
 
 canvas {
@@ -19,7 +20,5 @@ canvas {
 }
 
 .lightbulb {
-    border: solid 1px #acacac;
-    margin: 10px;
     height: 100%;
 }

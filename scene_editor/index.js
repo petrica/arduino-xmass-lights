@@ -3,49 +3,56 @@ $(function () {
     var sampleRate = 100;
     var chart = null;
     var samples = [];
+    var textarea = $('textarea');
+    var play = $('input#play');
+    var selector = $('#scenes');
 
-    $('textarea').val(localStorage.getItem('pattern'));
-    $('textarea').on('keyup', function (event) {
-        var pattern = $('textarea').val();
-        localStorage.setItem('pattern', pattern);
+    var scenes = [
+        { name: "Xmass", 
+          data: 
+`0,1,200;
+1,0,200;
+0,1,200;
+1,0,200;
+0,1,50;
+1,0,50;
+0,1,50;
+1,0,50`}
+    ];
 
-        var parser = new Parser(pattern);
-        var fades = parser.parse();
-        
-        var sampler = new Sampler(fades, sampleRate);
-        samples = sampler.sample();
-
-        var labels = [];
-        var tick = Math.round(1000 /  sampleRate);
-        samples.forEach((step, index) => {
-            var value = index * tick;
-            labels.push((value % 500 == 0) ? value / 1000 + 's' : '');
-        });
-        console.log(labels);
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = samples;
-        chart.update('none');
-    });
-    $('input#play').on('click', function (event) {
-        event.preventDefault();
-
-        if (player) {
-            player.stop();
-        }
-        player = new Player(samples, sampleRate);
-        player.play();
-
-        return false;
+    scenes.forEach((value, index) => {
+        selector.append($('<option>', {
+            value: index,
+            text: value.name
+        }));
     });
 
-    $('input#stop').on('click', function (event) {
+    textarea.val(localStorage.getItem('pattern'));
+    textarea.on('keydown', function (event) {
+        if (event.keyCode == 32) {
+            event.preventDefault();
+            sampleAndUpdateChart();
+            playStop();
+        }
+    });
+
+    textarea.on('keyup', function (event) {
+        selector.val("");
+        sampleAndUpdateChart();
+    });
+
+    selector.on('change', function (event) {
+        textarea.val(scenes[selector.val()].data);
+        sampleAndUpdateChart();
+        playStop();
+    });
+
+    play.on('click', function (event) {
         event.preventDefault();
 
-        if (player) {
-            player.stop();
-        }
+        sampleAndUpdateChart();
 
-        return false;
+        playStop();
     });
 
     chart = new Chart($('#scene'), {
@@ -100,16 +107,50 @@ $(function () {
             }
         }
     });
+
+    function sampleAndUpdateChart() {
+        var pattern = textarea.val();
+        localStorage.setItem('pattern', pattern);
+    
+        var parser = new Parser(pattern);
+        var fades = parser.parse();
+        
+        var sampler = new Sampler(fades, sampleRate);
+        samples = sampler.sample();
+    
+        var labels = [];
+        var tick = Math.round(1000 /  sampleRate);
+        samples.forEach((step, index) => {
+            var value = index * tick;
+            labels.push((value % 500 == 0) ? value / 1000 + 's' : '');
+        });
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = samples;
+        chart.update('none');
+    }
+
+    function playStop() {
+        if (player) {
+            player.stop();
+            player = null;
+            play.val("play");
+        }
+        else {
+            player = new Player(samples, sampleRate);
+            player.play();
+            play.val("stop");
+        }
+    }
 });
 
 var Player = function(samples, sampleRate) {
     this.samples = samples;
     this.sampleRate = parseInt(sampleRate);
     this.body = $('.lightbulb');
-    this.loop = true;
+    this.progress = $('#progress');
+    this.timeout = null;
 
     this.play = function () {
-        this.loop = true;
         var self = this;
         var step = 1000 / sampleRate;
         var i = 0;
@@ -117,11 +158,12 @@ var Player = function(samples, sampleRate) {
         var playFrame = function () {
             if (i < self.samples.length) {
                 self.draw(self.samples[i]);
+                progress.value = i > 0 ? i / self.samples.length : 0;
                 i++;
 
-                setTimeout(playFrame, step)
+                self.timeout = setTimeout(playFrame, step)
             }
-            else if (self.loop) {
+            else {
                 i = 0;
                 playFrame();
             }
@@ -131,7 +173,9 @@ var Player = function(samples, sampleRate) {
     }
 
     this.stop = function () {
-        this.loop = false;
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
     }
 
     this.draw = function(value) {
@@ -140,7 +184,7 @@ var Player = function(samples, sampleRate) {
         const r = from[0] + (to[0] - from[0]) / 255 * value;
         const g = from[1] + (to[1] - from[1]) / 255 * value;
         const b = from[2] + (to[2] - from[2]) / 255 * value;
-        this.body.css('background-color', 'rgb(' + r + ',' + g + ',' + b + ')');
+        this.body.css('background', 'radial-gradient(rgb(' + r + ',' + g + ',' + b + ')' + '50%, rgb(48, 48, 48) 70%)');
     }
 }
 
@@ -239,7 +283,7 @@ var Parser = function (pattern) {
         $(fadesRaw).each(function () {
             var elements = this.split(",");
             if (elements.length < 3 || elements.length > 4) {
-                throw "Not a valid interval.";
+                return;
             }
             fades.push(new Fade(elements[0].trim(), 
                 elements[1].trim(), 
